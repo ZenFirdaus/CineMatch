@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineMatch — Rekomendasi Film</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SPLASH SCREEN (saat server masih loading data)
+══════════════════════════════════════════════════ -->
+<div id="app-splash" class="app-splash">
+  <div class="splash-inner">
+    <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="#E8611A"/>
+      <path d="M8 8h3v12H8V8zm5 0h3l4 6-4 6h-3l4-6-4-6z" fill="white"/>
+    </svg>
+    <span class="splash-logo">Cine<strong>Match</strong></span>
+    <div class="splash-bar"><div class="splash-progress" id="splash-progress"></div></div>
+    <p class="splash-msg" id="splash-msg">Memuat data film…</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a class="nav-logo" href="#" data-nav="home">
+      <svg class="logo-icon" width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="6" fill="#E8611A"/>
+        <path d="M8 8h3v12H8V8zm5 0h3l4 6-4 6h-3l4-6-4-6z" fill="white"/>
+      </svg>
+      <span>Cine<strong>Match</strong></span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#" class="nav-link active" data-nav="home">Beranda</a></li>
+      <li><a href="#" class="nav-link" data-nav="recommendations">Rekomendasi</a></li>
+      <li><a href="#" class="nav-link" data-nav="preferences">Preferensi Saya</a></li>
+    </ul>
+    <button class="nav-cta" id="nav-generate" data-nav="recommendations">Cari Film</button>
+    <button class="nav-burger" id="nav-burger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     VIEW: HOME (Hero)
+══════════════════════════════════════════════════ -->
+<div id="view-home" class="view active">
+  <header class="hero">
+    <div class="hero-bg">
+      <div class="hero-film-strip">
+        <div class="film-hole top"></div>
+        <div class="film-frames" id="hero-frames"></div>
+        <div class="film-hole bottom"></div>
+      </div>
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Didukung MovieLens · 86.000+ Film</p>
+      <h1 class="hero-title">Temukan Film<br /><span class="accent">Berikutnya</span></h1>
+      <p class="hero-desc">Rekomendasi personal berdasarkan genre, suasana, dan preferensi tontonan kamu — tanpa perlu daftar akun.</p>
+      <div class="hero-actions">
+        <button class="btn-hero-primary" data-nav="preferences">Atur Preferensi</button>
+        <button class="btn-hero-secondary" data-nav="recommendations">Lihat Rekomendasi</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="home-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <h2 class="section-title">Jelajahi Genre</h2>
+      </div>
+      <div class="genre-showcase" id="genre-showcase"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     VIEW: PREFERENSI
+══════════════════════════════════════════════════ -->
+<div id="view-preferences" class="view">
+  <div class="prefs-page">
+    <div class="prefs-header">
+      <h1 class="prefs-title">Preferensi Saya</h1>
+      <p class="prefs-sub">Ceritakan apa yang kamu suka. Kami akan menyesuaikan rekomendasinya.</p>
+    </div>
+
+    <form id="prefs-form" class="prefs-form" novalidate>
+
+      <!-- Bagian 1 -->
+      <div class="pref-section">
+        <div class="pref-section-label">
+          <span class="pref-section-num">01</span>
+          <div>
+            <h3 class="pref-section-title">Tentang Kamu</h3>
+            <p class="pref-section-desc">Membantu menyesuaikan rekomendasi dengan profilmu.</p>
+          </div>
+        </div>
+        <div class="pref-section-body">
+          <div class="field-group">
+            <label class="field-label" for="pref-age">Usia <span class="field-opt">(opsional)</span></label>
+            <div class="age-input-wrap">
+              <input type="number" id="pref-age" class="field-input" min="5" max="99" placeholder="cth. 25" />
+            </div>
+            <p class="field-hint">Digunakan untuk menyesuaikan rekomendasi — tidak disimpan di luar perangkatmu.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bagian 2 -->
+      <div class="pref-section">
+        <div class="pref-section-label">
+          <span class="pref-section-num">02</span>
+          <div>
+            <h3 class="pref-section-title">Genre Favorit</h3>
+            <p class="pref-section-desc">Pilih satu atau lebih genre yang kamu sukai.</p>
+          </div>
+        </div>
+        <div class="pref-section-body">
+          <div id="liked-genres" class="chip-grid">
+            <span class="chip-loading">Memuat genre…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bagian 3 -->
+      <div class="pref-section">
+        <div class="pref-section-label">
+          <span class="pref-section-num">03</span>
+          <div>
+            <h3 class="pref-section-title">Genre yang Dihindari</h3>
+            <p class="pref-section-desc">Film dengan genre ini akan dikeluarkan dari hasil.</p>
+          </div>
+        </div>
+        <div class="pref-section-body">
+          <div id="disliked-genres" class="chip-grid">
+            <span class="chip-loading">Memuat genre…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bagian 4 -->
+      <div class="pref-section">
+        <div class="pref-section-label">
+          <span class="pref-section-num">04</span>
+          <div>
+            <h3 class="pref-section-title">Suasana Film</h3>
+            <p class="pref-section-desc">Pengalaman apa yang sedang kamu cari?</p>
+          </div>
+        </div>
+        <div class="pref-section-body">
+          <div id="mood-chips" class="chip-grid mood-grid"></div>
+        </div>
+      </div>
+
+      <!-- Bagian 5 -->
+      <div class="pref-section">
+        <div class="pref-section-label">
+          <span class="pref-section-num">05</span>
+          <div>
+            <h3 class="pref-section-title">Detail Film</h3>
+            <p class="pref-section-desc">Rating, tahun rilis, dan durasi yang kamu inginkan.</p>
+          </div>
+        </div>
+        <div class="pref-section-body">
+
+          <div class="field-group">
+            <label class="field-label">Rating Minimum</label>
+            <div class="slider-row">
+              <input type="range" id="pref-rating" min="0" max="5" step="0.5" value="3.5" class="slider" />
+              <div class="slider-output">
+                <span id="rating-display">3.5</span>
+                <span class="slider-unit">/ 5.0</span>
+              </div>
+            </div>
+            <div class="slider-ticks">
+              <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Rentang Tahun Rilis</label>
+            <div class="year-range-row">
+              <div class="year-field">
+                <label class="field-sublabel" for="pref-year-from">Dari</label>
+                <input type="number" id="pref-year-from" class="field-input year-inp" placeholder="1900" />
+              </div>
+              <div class="year-sep">—</div>
+              <div class="year-field">
+                <label class="field-sublabel" for="pref-year-to">Sampai</label>
+                <input type="number" id="pref-year-to" class="field-input year-inp" placeholder="2023" />
+              </div>
+            </div>
+            <p id="year-error" class="field-error" hidden></p>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="pref-duration">Durasi Film</label>
+            <div class="select-wrap">
+              <select id="pref-duration" class="field-select"></select>
+              <span class="select-caret">▾</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="prefs-actions">
+        <button type="submit" class="btn-primary btn-lg" id="generate-btn">
+          <span class="btn-text">Cari Rekomendasi</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+        <button type="button" class="btn-ghost" id="reset-prefs-btn">Reset Preferensi</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     VIEW: REKOMENDASI
+══════════════════════════════════════════════════ -->
+<div id="view-recommendations" class="view">
+  <div class="recs-page">
+
+    <div class="recs-toolbar">
+      <div class="recs-toolbar-left">
+        <h1 class="recs-page-title">Film Rekomendasi</h1>
+        <span class="recs-count" id="recs-count"></span>
+      </div>
+      <div class="recs-toolbar-right">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="recs-search" class="search-input" placeholder="Cari judul atau genre…" />
+          <button class="search-clear" id="search-clear" hidden>✕</button>
+        </div>
+        <div class="sort-box">
+          <select id="recs-sort" class="sort-select">
+            <option value="score">Paling Relevan</option>
+            <option value="rating">Rating Tertinggi</option>
+            <option value="year_desc">Terbaru</option>
+            <option value="year_asc">Terlama</option>
+            <option value="title">Judul A–Z</option>
+          </select>
+        </div>
+        <button class="btn-outline-sm" data-nav="preferences">Edit Preferensi</button>
+      </div>
+    </div>
+
+    <div class="active-prefs-bar" id="active-prefs-bar"></div>
+    <div class="genre-filter-bar" id="genre-filter-bar"></div>
+
+    <!-- State: belum generate -->
+    <div id="recs-initial" class="state-block">
+      <div class="state-icon">🎬</div>
+      <p class="state-title">Belum Ada Rekomendasi</p>
+      <p class="state-desc">Atur preferensimu dan cari film yang sesuai selera.</p>
+      <button class="btn-primary" data-nav="preferences">Atur Preferensi</button>
+    </div>
+
+    <!-- State: loading -->
+    <div id="recs-loading" class="state-block" hidden>
+      <div class="loader-ring"></div>
+      <p class="state-title" id="loading-title">Menganalisis preferensi…</p>
+      <p class="state-desc" id="loading-desc">Ini mungkin membutuhkan beberapa detik.</p>
+    </div>
+
+    <!-- State: hasil -->
+    <div id="recs-content" hidden>
+      <section class="recs-section" id="sec-top" hidden>
+        <div class="recs-section-header">
+          <h2 class="recs-section-title">Pilihan Terbaik untuk Kamu</h2>
+          <p class="recs-section-sub">Skor kecocokan tertinggi</p>
+        </div>
+        <div class="top-picks-grid" id="top-picks-grid"></div>
+      </section>
+
+      <section class="recs-section" id="sec-best" hidden>
+        <div class="recs-section-header">
+          <h2 class="recs-section-title">Sangat Sesuai</h2>
+          <p class="recs-section-sub">Film dengan kecocokan tinggi terhadap preferensimu</p>
+        </div>
+        <div class="card-grid" id="best-match-grid"></div>
+      </section>
+
+      <section class="recs-section" id="sec-more" hidden>
+        <div class="recs-section-header">
+          <h2 class="recs-section-title">Film Lainnya untuk Kamu</h2>
+          <p class="recs-section-sub">Judul tambahan yang sesuai seleramu</p>
+        </div>
+        <div class="card-grid" id="more-grid"></div>
+      </section>
+    </div>
+
+    <!-- State: kosong -->
+    <div id="recs-empty" class="state-block" hidden>
+      <div class="state-icon">🔍</div>
+      <p class="state-title">Tidak Ada Film Ditemukan</p>
+      <p class="state-desc">Tidak ada film yang cocok dengan filtermu saat ini. Coba perluas pilihan genre, turunkan rating minimum, atau perbesar rentang tahun.</p>
+      <button class="btn-primary" data-nav="preferences">Ubah Preferensi</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: Detail Film
+══════════════════════════════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay" hidden>
+  <div class="modal" id="modal-detail">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-poster-wrap">
+      <img id="modal-poster" class="modal-poster" src="" alt="" loading="lazy" />
+      <div class="modal-poster-placeholder" id="modal-poster-ph"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta-top">
+        <span class="modal-year" id="modal-year"></span>
+        <span class="modal-score-badge" id="modal-score"></span>
+      </div>
+      <h2 class="modal-title" id="modal-title"></h2>
+      <div class="modal-genres" id="modal-genres"></div>
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <span class="modal-stat-label">Rata-rata Rating</span>
+          <span class="modal-stat-val" id="modal-rating"></span>
+        </div>
+        <div class="modal-stat">
+          <span class="modal-stat-label">Jumlah Ulasan</span>
+          <span class="modal-stat-val" id="modal-reviews"></span>
+        </div>
+      </div>
+      <div class="modal-links" id="modal-links"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="footer-logo">Cine<strong>Match</strong></span>
+    <span class="footer-sep">·</span>
+    <span>Data: <a href="https://grouplens.org/datasets/movielens/" target="_blank" rel="noopener">MovieLens</a>, GroupLens Research</span>
+    <span class="footer-sep">·</span>
+    <span>Tanpa registrasi</span>
+  </div>
+</footer>
+
+<script src="/static/js/script.js"></script>
+</body>
+</html>
